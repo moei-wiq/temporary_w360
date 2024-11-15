@@ -12,15 +12,10 @@ on:
             - major
             - minor
             - patch
-#      commit_sha:
-#        description: 'Commit SHA to cherry-pick (only required for patch)'
-#        required: false
-#        type: string
-#      release_version:
-#        description: 'Release version (only required for non-patch)'
-#        default: 'v1.0.0'
-#        required: false
-#        type: string
+      commit_sha:
+        description: 'Commit SHA to cherry-pick (only required for patch)'
+        required: false
+        type: string
 
 jobs:
   validate-source-branch:
