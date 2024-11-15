@@ -60,11 +60,8 @@ jobs:
       - name: Increment version
         id: increment-version
         run: |
-          git tag --sort=creatordate
           version=$(git tag --sort=creatordate | tail -1)
-          echo "Found the latest version: $version"
           IFS='.' read -r major minor patch <<< "${version:1}"
-          echo "Split into major: ${major} | minor: ${minor} | patch: ${patch}"
           if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
             echo "Increasing major version"
             major=$((major + 1))
