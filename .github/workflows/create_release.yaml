@@ -58,16 +58,16 @@ jobs:
 
       - name: Bump version
         id: bump-version
-#        uses: release-it/release-it-action@v1
-#        with:
-#          release_type: ${{ github.event.inputs.release_type }}
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install -g standard-version
-          standard-version --release-as ${{ github.event.inputs.release_type }}
-          VERSION=$(node -p "require('./package.json').version")
-          echo "::set-output name=version::$VERSION"
+        uses: release-it/release-it-action@v1
+        with:
+          release_type: ${{ github.event.inputs.release_type }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          npm install -g standard-version
+#          standard-version --release-as ${{ github.event.inputs.release_type }}
+#          VERSION=$(node -p "require('./package.json').version")
+#          echo "::set-output name=version::$VERSION"
 
       - name: Push changes
         run: |
