@@ -16,6 +16,11 @@ on:
         description: 'Commit SHA to cherry-pick (only required for patch)'
         required: false
         type: string
+      release_version:
+        description: 'Release version (only required for non-patch)'
+        default: 'v1.0.0'
+        required: false
+        type: string
 
 jobs:
   validate-source-branch:
@@ -33,14 +38,15 @@ jobs:
 
   create-release-branch:
     needs: validate-source-branch
-    if: ${{ github.event.inputs.release_type != 'patch' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
     environment:
       name: prod
     steps:
-      - name: Checkout
+      - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           persist-credentials: false
       - name: Create release branch
         run: |
@@ -53,7 +59,7 @@ jobs:
 
   cherry-pick-commit:
     needs: validate-source-branch
-    if: ${{ github.event.inputs.release_type == 'patch' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event.inputs.release_type == 'patch' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the branch the workflow is run from
