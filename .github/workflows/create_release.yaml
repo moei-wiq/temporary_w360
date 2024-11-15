@@ -64,18 +64,24 @@ jobs:
           echo "major=$major" >> $GITHUB_OUTPUT
           echo "minor=$minor" >> $GITHUB_OUTPUT
           echo "patch=$patch" >> $GITHUB_OUTPUT
-          echo "Found the latest version: ${versions[0]}.${versions[1]}.${versions[2]}"
+          echo "Found the latest version: ${major}.${minor}.${patch}"
           if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
+            echo "Increasing major version"
             major=$((major + 1))
             minor=0
             patch=0
           elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
+            echo "Increasing minor version"
             minor=$((minor + 1))
             patch=0
           elif [[ "${{ github.event.inputs.release_type }}" == "patch" ]]; then
+            echo "Increasing patch version"
             patch=$((patch + 1))
+          else
+            echo "Error: Unknown release type ${{ github.event.inputs.release_type }}"
+            exit 1
           fi
-          new_version="v$major.$minor.$patch"
+          new_version="v${major}.${minor}.${patch}"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
           echo "New version: $new_version"
 
