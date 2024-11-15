@@ -1,4 +1,4 @@
-name: Create Release
+name: Create or Update Release
 run-name: Release ${{ github.event.release.tag_name }} by ${{ github.actor }}
 on:
   workflow_dispatch:
@@ -32,12 +32,33 @@ jobs:
             echo "Error: Can only create/update release from the main branch for non-patch releases"
             exit 1
           elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ! "${{ github.ref }}" =~ ^refs/heads/release/ ]]; then
-            echo "Error: Can only create/update patch releases from release/* branches"
+            echo "Error: Can only create patch releases from existing release/* branches"
             exit 1
           fi
 
-  create-release-branch:
+  bump-version:
     needs: validate-source-branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Bump version
+        id: bump_version
+        run: |
+          npm install -g standard-version
+          standard-version --release-as ${{ github.event.inputs.release_type }}
+          VERSION=$(node -p "require('./package.json').version")
+          echo "::set-output name=version::$VERSION"
+
+      - name: Push changes
+        run: |
+          git push --follow-tags origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-release-branch:
+    needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
     environment:
@@ -48,33 +69,48 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           persist-credentials: false
-      - name: Create release branch
+      - name: Authenticate with github
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git checkout -b release/${{ github.event.inputs.release_version }}
-          git push origin release/${{ github.event.inputs.release_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  cherry-pick-commit:
-    needs: validate-source-branch
-    if: ${{ github.event.inputs.release_type == 'patch' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the branch the workflow is run from
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          persist-credentials: false
-      - name: Cherry-pick commit from main
+      - name: Tag main branch
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
           git fetch origin main
-          git cherry-pick origin/main ${{ github.event.inputs.commit_sha }}
-          git push origin ${{ github.head_ref }}
+          git checkout main
+          git tag v${{ steps.bump_version.outputs.version }}
+          git push origin v${{ steps.bump_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create & tag release branch
+        run: |
+          git checkout -b release/${{ github.event.inputs.release_version }}
+          git tag v${{ steps.bump_version.outputs.version }}-release
+          git push origin release/${{ github.event.inputs.release_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#  cherry-pick-commit:
+#    needs: validate-source-branch
+#    if: ${{ github.event.inputs.release_type == 'patch' }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout the branch the workflow is run from
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ github.head_ref }}
+#          persist-credentials: false
+#      - name: Cherry-pick commit from main
+#        run: |
+#          git config --global user.name 'github-actions[bot]'
+#          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+#          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+#          git fetch origin main
+#          git cherry-pick origin/main ${{ github.event.inputs.commit_sha }}
+#          git push origin ${{ github.head_ref }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
