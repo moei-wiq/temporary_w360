@@ -46,6 +46,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Authenticate with github
@@ -59,7 +60,7 @@ jobs:
       - name: Increment version
         id: increment-version
         run: |
-          echo $(git tag --sort=creatordate)
+          git tag --sort=creatordate
           version=$(git tag --sort=creatordate | tail -1)
           echo "Found the latest version: $version"
           IFS='.' read -r major minor patch <<< "${version:1}"
