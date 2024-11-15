@@ -52,6 +52,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git checkout -b release/${{ github.event.inputs.release_version }}
           git push origin release/${{ github.event.inputs.release_version }}
         env:
@@ -71,6 +72,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
           git fetch origin main
           git cherry-pick origin/main ${{ github.event.inputs.commit_sha }}
           git push origin ${{ github.head_ref }}
