@@ -1,5 +1,5 @@
 name: Create or Update Release
-run-name: Release ${{ github.event.release.tag_name }} by ${{ github.actor }}
+run-name: Create or update release for${{ github.event.release.tag_name }} by ${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
@@ -12,15 +12,15 @@ on:
             - major
             - minor
             - patch
-      commit_sha:
-        description: 'Commit SHA to cherry-pick (only required for patch)'
-        required: false
-        type: string
-      release_version:
-        description: 'Release version (only required for non-patch)'
-        default: 'v1.0.0'
-        required: false
-        type: string
+#      commit_sha:
+#        description: 'Commit SHA to cherry-pick (only required for patch)'
+#        required: false
+#        type: string
+#      release_version:
+#        description: 'Release version (only required for non-patch)'
+#        default: 'v1.0.0'
+#        required: false
+#        type: string
 
 jobs:
   validate-source-branch:
@@ -57,7 +57,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  create-release-branch:
+  create-release:
     needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
@@ -69,6 +69,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           persist-credentials: false
+
       - name: Authenticate with github
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -88,11 +89,30 @@ jobs:
 
       - name: Create & tag release branch
         run: |
-          git checkout -b release/${{ github.event.inputs.release_version }}
+          git checkout -b release/v${{ steps.bump_version.outputs.version }}
           git tag v${{ steps.bump_version.outputs.version }}-release
           git push origin release/${{ github.event.inputs.release_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release
+        steps:
+          - name: Checkout code
+            uses: actions/checkout@v4
+            with:
+              ref: release/${{ github.event.inputs.release_version }}
+
+          - name: Create GitHub release
+            uses: actions/create-release@v1
+            with:
+              tag_name: v${{ steps.bump_version.outputs.version }}
+              release_name: Release ${{ steps.bump_version.outputs.version }}
+              body: |
+                Release ${{ steps.bump_version.outputs.version }}
+              draft: false
+              prerelease: false
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #
 #  cherry-pick-commit:
 #    needs: validate-source-branch
