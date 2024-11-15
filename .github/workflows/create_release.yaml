@@ -12,13 +12,6 @@ on:
             - major
             - minor
             - patch
-      create_github_release:
-        description: 'Whether to create github release or not'
-        required: true
-        type: choice
-        options:
-          - false
-          - true
       commit_sha:
         description: 'Commit SHA to cherry-pick (only required for patch)'
         required: false
@@ -117,7 +110,6 @@ jobs:
           RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
       - name: Create GitHub release
-        if: ${{ github.event.inputs.create_github_release == 'true' }}
         uses: actions/create-release@v1
         with:
           tag_name: ${{ needs.bump-version.outputs.new_version }}
@@ -159,7 +151,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub release
-        if: ${{ github.event.inputs.create_github_release == 'true' }}
         uses: actions/create-release@v1
         with:
           tag_name: ${{ needs.bump-version.outputs.new_version }}
