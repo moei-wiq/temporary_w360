@@ -16,11 +16,11 @@ on:
 #        description: 'Commit SHA to cherry-pick (only required for patch)'
 #        required: false
 #        type: string
-      release_version:
-        description: 'Release version (only required for non-patch)'
-        default: 'v1.0.0'
-        required: false
-        type: string
+#      release_version:
+#        description: 'Release version (only required for non-patch)'
+#        default: 'v1.0.0'
+#        required: false
+#        type: string
 
 jobs:
   validate-source-branch:
@@ -59,6 +59,7 @@ jobs:
       - name: Increment version
         id: increment-version
         run: |
+          echo $(git tag --sort=creatordate)
           version=$(git tag --sort=creatordate | tail -1)
           echo "Found the latest version: $version"
           IFS='.' read -r major minor patch <<< "${version:1}"
