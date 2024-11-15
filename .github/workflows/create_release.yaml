@@ -116,15 +116,14 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: $RELEASE_VERSION
-          release_name: Release $RELEASE_VERSION
+          tag_name: ${{ needs.bump-version.outputs.new_version }}
+          release_name: Release ${{ needs.bump-version.outputs.new_version }}
           body: |
             Release ${{ github.event.inputs.release_type }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
 #  cherry-pick-commit:
 #    needs: validate-source-branch
