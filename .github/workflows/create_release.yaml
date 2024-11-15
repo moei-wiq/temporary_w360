@@ -95,24 +95,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create release
-        steps:
-          - name: Checkout code
-            uses: actions/checkout@v4
-            with:
-              ref: release/${{ github.event.inputs.release_version }}
-
-          - name: Create GitHub release
-            uses: actions/create-release@v1
-            with:
-              tag_name: v${{ steps.bump_version.outputs.version }}
-              release_name: Release ${{ steps.bump_version.outputs.version }}
-              body: |
-                Release ${{ steps.bump_version.outputs.version }}
-              draft: false
-              prerelease: false
-            env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.bump_version.outputs.version }}
+          release_name: Release ${{ steps.bump_version.outputs.version }}
+          body: |
+            Release ${{ steps.bump_version.outputs.version }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #
 #  cherry-pick-commit:
 #    needs: validate-source-branch
