@@ -51,8 +51,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
       - name: Bump version
-        id: bump_version
+        id: bump-version
+#        uses: release-it/release-it-action@v1
+#        with:
+#          release_type: ${{ github.event.inputs.release_type }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm install -g standard-version
           standard-version --release-as ${{ github.event.inputs.release_type }}
