@@ -13,36 +13,26 @@ on:
             - minor
             - patch
       commit_sha:
-        description: 'Commit SHA to cherry-pick'
-        required: true
-        type: string
-      release_branch:
-        description: 'Existing release branch to merge into (release/vX.Y.Z)'
-        required: true
+        description: 'Commit SHA to cherry-pick (only required for patch)'
+        required: false
         type: string
 
 jobs:
-  validate-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate release branch
-        run: |
-          if [[ ! "${{ github.event.inputs.release_branch }}" =~ ^release/ ]]; then
-            echo "Error: release_branch must be prefixed by 'release/'"
-            exit 1
-          fi
-
   validate-source-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate release branch
+      - name: Validate source branch
         run: |
-          if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
-            echo "Error: Can only create/update release from the main branch"
+          if [[ "${{ github.event.inputs.release_type }}" != "patch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
+            echo "Error: Can only create/update release from the main branch for non-patch releases"
+            exit 1
+          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ! "${{ github.ref }}" =~ ^refs/heads/release/ ]]; then
+            echo "Error: Can only create/update patch releases from release/* branches"
             exit 1
           fi
 
   create-release-branch:
+    needs: validate-source-branch
     if: ${{ github.event.inputs.release_type != 'patch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
@@ -62,20 +52,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   cherry-pick-commit:
-    needs: validate-branch
+    needs: validate-source-branch
     if: ${{ github.event.inputs.release_type == 'patch' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           persist-credentials: false
-      - name: Cherry-pick commit
+      - name: Cherry-pick commit from main
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git checkout ${{ github.event.inputs.release_branch }}
-          git cherry-pick ${{ github.event.inputs.commit_sha }}
-          git push origin ${{ github.event.inputs.release_branch }}
+          git fetch origin main
+          git cherry-pick origin/main ${{ github.event.inputs.commit_sha }}
+          git push origin ${{ github.head_ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
