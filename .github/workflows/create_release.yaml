@@ -31,6 +31,7 @@ jobs:
             exit 1
           fi
 
+
   bump-version:
     needs: validate-source-branch
     runs-on: ubuntu-latest
@@ -73,6 +74,8 @@ jobs:
           new_version="v${major}.${minor}.${patch}"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
           echo "Bump version $version ---> $new_version"
+
+
 
 
   create-release:
