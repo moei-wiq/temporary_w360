@@ -17,8 +17,8 @@ on:
         required: true
         type: choice
         options:
-          - true
           - false
+          - true
       commit_sha:
         description: 'Commit SHA to cherry-pick (only required for patch)'
         required: false
