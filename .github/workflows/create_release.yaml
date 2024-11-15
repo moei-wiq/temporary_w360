@@ -63,16 +63,13 @@ jobs:
           version=$(git tag --sort=creatordate | tail -1)
           IFS='.' read -r major minor patch <<< "${version:1}"
           if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
-            echo "Increasing major version"
             major=$((major + 1))
             minor=0
             patch=0
           elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
-            echo "Increasing minor version"
             minor=$((minor + 1))
             patch=0
           elif [[ "${{ github.event.inputs.release_type }}" == "patch" ]]; then
-            echo "Increasing patch version"
             patch=$((patch + 1))
           else
             echo "Error: Unknown release type ${{ github.event.inputs.release_type }}"
@@ -80,7 +77,7 @@ jobs:
           fi
           new_version="v${major}.${minor}.${patch}"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
-          echo "New version: $new_version"
+          echo "Bump version $version ---> $new_version"
 
 
   create-release:
