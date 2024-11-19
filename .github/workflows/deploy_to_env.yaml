@@ -9,8 +9,9 @@ on:
         default: 'dev'
         type: choice
         options:
-          - major
-          - minor
+          - dev
+          - uat
+          - prod
       version:
         description: 'The version that will be deployed'
         required: true
