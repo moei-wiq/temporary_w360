@@ -24,7 +24,7 @@ on:
       manual_call:
         description: 'To distinguish workflow_call from workflow_dispatch'
         type: boolean
-        required: true
+        required: false
         default: true
   workflow_call:
     inputs:
@@ -46,7 +46,7 @@ on:
       manual_call:
         description: 'To distinguish workflow_call from workflow_dispatch'
         type: boolean
-        required: true
+        required: false
         default: false
 
 jobs:
