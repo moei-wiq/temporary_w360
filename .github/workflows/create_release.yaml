@@ -77,8 +77,6 @@ jobs:
     needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
-    environment:
-      name: prod
     outputs:
       release_branch: ${{ steps.create-release-branch.outputs.release_branch }}
     steps:
