@@ -11,6 +11,11 @@ on:
         options:
             - major
             - minor
+      delete_release_branch_on_failure:
+        description: 'Whether to delete release branch if deployment fails'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   validate-source-branch:
@@ -73,7 +78,7 @@ jobs:
 
 
 
-  create-release:
+  prepare-release:
     needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
@@ -96,6 +101,7 @@ jobs:
 
       - name: Create release branch
         id: create-release-branch
+        continue-on-error: true
         run: |
           git checkout -b release/$RELEASE_VERSION
           git tag $RELEASE_VERSION
@@ -105,8 +111,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
+      - name: Run tests
+        run: echo "Running tests..."
+
   deploy:
-    needs: create-release
+    needs: prepare-release
     runs-on: ubuntu-latest
     environment:
       name: prod
@@ -132,7 +141,7 @@ jobs:
         run: echo "Deploying to production..."
 
   cleanup-failed-deployment:
-    needs: [ create-release, deploy ]
+    needs: [ prepare-release, deploy ]
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -153,5 +162,6 @@ jobs:
             echo "Release ${{ github.env.RELEASE_VERSION }} not found."
           fi
       - name: Delete release branch
+        if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
-          git branch -D ${{ needs.create-release.outputs.release_branch }}
+          git branch -D ${{ needs.prepare-release.outputs.release_branch }}
