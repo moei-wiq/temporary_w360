@@ -120,12 +120,11 @@ jobs:
         run: echo "Running tests..."
 
   call-deploy-job:
-    all-reusable-workflow:
-      uses: ./.github/workflows/deploy_to_env.yaml
-      with:
-        env: 'prod'
-        version: ${{ needs.bump-version.outputs.new_version }}
-        delete_release_branch_on_failure: false
+    uses: ./.github/workflows/deploy_to_env.yaml
+    with:
+      env: 'prod'
+      version: ${{ needs.bump-version.outputs.new_version }}
+      delete_release_branch_on_failure: false
 #  deploy:
 #    needs: [prepare-release, bump-version]
 #    runs-on: ubuntu-latest
