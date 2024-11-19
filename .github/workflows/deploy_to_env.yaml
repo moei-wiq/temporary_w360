@@ -45,8 +45,8 @@ jobs:
     steps:
       - name: Validate source branch
         run: |
-          if [[ "${{ github.ref }}" =~ ^refs/heads/release/ ]]; then
-            echo "Error: Can only deploy from existing release/* branches"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
+            echo "Error: Can only deploy from existing release/* branches in production"
             exit 1
           fi
 
