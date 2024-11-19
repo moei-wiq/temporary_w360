@@ -153,6 +153,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Delete GitHub release
+        continue-on-error: true
         run: |
           release_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.bump-version.outputs.new_version }} \
@@ -165,10 +166,12 @@ jobs:
             echo "Release ${{ needs.bump-version.outputs.new_version }} not found."
           fi
       - name: Delete Git tag
+        continue-on-error: true
         run: |
           echo "Release version: ${{ needs.bump-version.outputs.new_version }}"
           git push --delete origin ${{ needs.bump-version.outputs.new_version }}
       - name: Delete release branch
+        continue-on-error: true
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
           git branch -D ${{ needs.prepare-release.outputs.release_branch }}
