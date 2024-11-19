@@ -82,6 +82,9 @@ jobs:
     needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
     outputs:
       release_branch: ${{ steps.create-release-branch.outputs.release_branch }}
     steps:
@@ -95,9 +98,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git remote set-url origin https://x-access-token:${{ github.env.GITHUB_TOKEN }}@github.com/${{ github.repository }}
 
       - name: Create release branch
         id: create-release-branch
@@ -107,9 +108,6 @@ jobs:
           git tag $RELEASE_VERSION
           git push origin release/$RELEASE_VERSION
           echo "release_branch=release/$RELEASE_VERSION" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
       - name: Run tests
         run: echo "Running tests..."
@@ -143,6 +141,7 @@ jobs:
   cleanup-failed-deployment:
     needs: [ prepare-release, deploy ]
     runs-on: ubuntu-latest
+    if: always()
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
