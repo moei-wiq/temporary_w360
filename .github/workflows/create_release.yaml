@@ -145,7 +145,7 @@ jobs:
   cleanup-failed-deployment:
     needs: [ prepare-release, bump-version, deploy ]
     runs-on: ubuntu-latest
-    if: always()
+    if: failure()
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
@@ -170,8 +170,8 @@ jobs:
         run: |
           echo "Release version: $RELEASE_VERSION"
           git push --delete origin $RELEASE_VERSION
+
       - name: Delete release branch
-        continue-on-error: true
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
-          git branch -D ${{ needs.prepare-release.outputs.release_branch }}
+          git branch -D release/$RELEASE_VERSION
