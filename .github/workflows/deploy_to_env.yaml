@@ -1,0 +1,97 @@
+name: Deploy to ${{ inputs.env }} environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Which environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+      version:
+        description: 'The version that will be deployed'
+        required: true
+        default: 'v0.0.0'
+        type: string
+      delete_release_branch_on_failure:
+        description: 'Whether to delete release branch if deployment fails'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  validate-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source branch
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/heads/release/ ]]; then
+            echo "Error: Can only deploy from existing release/* branches"
+            exit 1
+          fi
+
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.env }}
+    env:
+      RELEASE_VERSION: ${{ github.event.inputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare-release.outputs.release_branch }}
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ needs.bump-version.outputs.new_version }}
+          release_name: Release ${{ needs.bump-version.outputs.new_version }}
+          body: |
+            Release ${{ github.event.inputs.release_type }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to production
+        run: echo "Deploying to ${{ inputs.env }} ..."
+
+  cleanup-failed-deployment:
+    needs: [ deploy ]
+    runs-on: ubuntu-latest
+    if: failure()
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_VERSION: ${{ github.event.inputs.version }}
+      RELEASE_BRANCH: ${{ github.ref }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Delete GitHub release
+        continue-on-error: true
+        run: |
+          release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_VERSION \
+            | jq -r '.id')
+          if [ "$release_id" != "null" ]; then
+            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+              https://api.github.com/repos/${{ github.repository }}/releases/$release_id
+            echo "Release $RELEASE_VERSION deleted."
+          else
+            echo "Release $RELEASE_VERSION not found."
+          fi
+      - name: Delete Git tag
+        continue-on-error: true
+        run: |
+          echo "Release version: $RELEASE_VERSION"
+          git push --delete origin $RELEASE_VERSION
+
+      - name: Delete release branch
+        if: ${{ github.event.inputs.delete_release_branch_on_failure }}
+        run: |
+          git push origin --delete $RELEASE_BRANCH

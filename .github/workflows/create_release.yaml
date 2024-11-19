@@ -1,5 +1,5 @@
 name: Create Release
-run-name: Create release for${{ github.event.release.tag_name }} by ${{ github.actor }}
+run-name: Create release for ${{ github.event.release.tag_name }} by ${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
@@ -11,11 +11,16 @@ on:
         options:
             - major
             - minor
-      delete_release_branch_on_failure:
-        description: 'Whether to delete release branch if deployment fails'
+      auto_deploy:
+        description: 'Whether to trigger deployment to production after creating a release branch'
         required: true
         default: true
         type: boolean
+#      delete_release_branch_on_failure:
+#        description: 'Whether to delete release branch if deployment fails'
+#        required: true
+#        default: true
+#        type: boolean
 
 jobs:
   validate-source-branch:
@@ -114,63 +119,70 @@ jobs:
       - name: Run tests
         run: echo "Running tests..."
 
-  deploy:
-    needs: [prepare-release, bump-version]
-    runs-on: ubuntu-latest
-    environment:
-      name: prod
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.prepare-release.outputs.release_branch }}
-
-      - name: Create GitHub release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ needs.bump-version.outputs.new_version }}
-          release_name: Release ${{ needs.bump-version.outputs.new_version }}
-          body: |
-            Release ${{ github.event.inputs.release_type }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to production
-        run: echo "Deploying to production..."
-
-  cleanup-failed-deployment:
-    needs: [ prepare-release, bump-version, deploy ]
-    runs-on: ubuntu-latest
-    if: failure()
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
-      RELEASE_BRANCH: ${{ needs.prepare-release.outputs.release_branch }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Delete GitHub release
-        continue-on-error: true
-        run: |
-          release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_VERSION \
-            | jq -r '.id')
-          if [ "$release_id" != "null" ]; then
-            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              https://api.github.com/repos/${{ github.repository }}/releases/$release_id
-            echo "Release $RELEASE_VERSION deleted."
-          else
-            echo "Release $RELEASE_VERSION not found."
-          fi
-      - name: Delete Git tag
-        continue-on-error: true
-        run: |
-          echo "Release version: $RELEASE_VERSION"
-          git push --delete origin $RELEASE_VERSION
-
-      - name: Delete release branch
-        if: ${{ github.event.inputs.delete_release_branch_on_failure }}
-        run: |
-          git push origin --delete $RELEASE_BRANCH
+  call-deploy-job:
+    all-reusable-workflow:
+      uses: ./.github/workflows/deploy_to_env.yaml
+      with:
+        env: 'prod'
+        version: ${{ needs.bump-version.outputs.new_version }}
+        delete_release_branch_on_failure: false
+#  deploy:
+#    needs: [prepare-release, bump-version]
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: prod
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ needs.prepare-release.outputs.release_branch }}
+#
+#      - name: Create GitHub release
+#        uses: actions/create-release@v1
+#        with:
+#          tag_name: ${{ needs.bump-version.outputs.new_version }}
+#          release_name: Release ${{ needs.bump-version.outputs.new_version }}
+#          body: |
+#            Release ${{ github.event.inputs.release_type }}
+#          draft: false
+#          prerelease: false
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Deploy to production
+#        run: echo "Deploying to production..."
+#
+#  cleanup-failed-deployment:
+#    needs: [ prepare-release, bump-version, deploy ]
+#    runs-on: ubuntu-latest
+#    if: failure()
+#    env:
+#      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
+#      RELEASE_BRANCH: release/${{ needs.bump-version.outputs.new_version }}
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#      - name: Delete GitHub release
+#        continue-on-error: true
+#        run: |
+#          release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+#            https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_VERSION \
+#            | jq -r '.id')
+#          if [ "$release_id" != "null" ]; then
+#            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+#              https://api.github.com/repos/${{ github.repository }}/releases/$release_id
+#            echo "Release $RELEASE_VERSION deleted."
+#          else
+#            echo "Release $RELEASE_VERSION not found."
+#          fi
+#      - name: Delete Git tag
+#        continue-on-error: true
+#        run: |
+#          echo "Release version: $RELEASE_VERSION"
+#          git push --delete origin $RELEASE_VERSION
+#
+#      - name: Delete release branch
+#        if: ${{ github.event.inputs.delete_release_branch_on_failure }}
+#        run: |
+#          git push origin --delete $RELEASE_BRANCH
