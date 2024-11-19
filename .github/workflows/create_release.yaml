@@ -121,6 +121,7 @@ jobs:
 
   call-deploy-job:
     uses: ./.github/workflows/deploy_to_env.yaml
+    needs: [prepare-release, bump-version]
     with:
       env: 'prod'
       version: ${{ needs.bump-version.outputs.new_version }}
