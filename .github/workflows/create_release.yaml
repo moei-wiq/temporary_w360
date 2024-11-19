@@ -104,7 +104,7 @@ jobs:
         id: create-release-branch
         continue-on-error: true
         run: |
-          if git show-ref --verify --quiet refs/heads/release/$RELEASE_VERSION; then
+          if git ls-remote --exit-code --heads origin release/$RELEASE_VERSION; then
             git checkout release/$RELEASE_VERSION
             git pull
           else
