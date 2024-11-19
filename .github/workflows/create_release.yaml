@@ -155,21 +155,21 @@ jobs:
       - name: Delete GitHub release
         continue-on-error: true
         run: |
-          release_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ needs.bump-version.outputs.new_version }} \
+          release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_VERSION \
             | jq -r '.id')
           if [ "$release_id" != "null" ]; then
-            curl -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
               https://api.github.com/repos/${{ github.repository }}/releases/$release_id
-            echo "Release ${{ needs.bump-version.outputs.new_version }} deleted."
+            echo "Release $RELEASE_VERSION deleted."
           else
-            echo "Release ${{ needs.bump-version.outputs.new_version }} not found."
+            echo "Release $RELEASE_VERSION not found."
           fi
       - name: Delete Git tag
         continue-on-error: true
         run: |
-          echo "Release version: ${{ needs.bump-version.outputs.new_version }}"
-          git push --delete origin ${{ needs.bump-version.outputs.new_version }}
+          echo "Release version: $RELEASE_VERSION"
+          git push --delete origin $RELEASE_VERSION
       - name: Delete release branch
         continue-on-error: true
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
