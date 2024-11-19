@@ -94,17 +94,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ needs.bump-version.outputs.new_version }}
-          release_name: Release ${{ needs.bump-version.outputs.new_version }}
-          body: |
-            Release ${{ github.event.inputs.release_type }}
-          draft: false
-          prerelease: false
+      - name: Create release branch
+        id: create-release-branch
+        run: |
+          git checkout -b release/$RELEASE_VERSION
+          git tag $RELEASE_VERSION
+          git push origin release/$RELEASE_VERSION
+          echo "release_branch=release/$RELEASE_VERSION" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
   deploy:
     needs: create-release
@@ -117,16 +116,17 @@ jobs:
         with:
           ref: ${{ needs.create-release.outputs.release_branch }}
 
-      - name: Create release branch
-        id: create-release-branch
-        run: |
-          git checkout -b release/$RELEASE_VERSION
-          git tag $RELEASE_VERSION
-          git push origin release/$RELEASE_VERSION
-          echo "release_branch=release/$RELEASE_VERSION" >> $GITHUB_OUTPUT
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ needs.bump-version.outputs.new_version }}
+          release_name: Release ${{ needs.bump-version.outputs.new_version }}
+          body: |
+            Release ${{ github.event.inputs.release_type }}
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
 
       - name: Deploy to production
         run: echo "Deploying to production..."
