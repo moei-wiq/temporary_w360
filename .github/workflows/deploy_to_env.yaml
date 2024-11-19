@@ -1,7 +1,7 @@
 name: Deploy to ${{ inputs.env }} environment
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       env:
         description: 'Which environment to deploy to'
@@ -9,9 +9,25 @@ on:
         default: 'dev'
         type: choice
         options:
-          - dev
-          - uat
-          - prod
+          - major
+          - minor
+      version:
+        description: 'The version that will be deployed'
+        required: true
+        default: 'v0.0.0'
+        type: string
+      delete_release_branch_on_failure:
+        description: 'Whether to delete release branch if deployment fails'
+        required: true
+        default: true
+        type: boolean
+  workflow_call:
+    inputs:
+      env:
+        description: 'Which environment to deploy to'
+        required: true
+        default: 'dev'
+        type: string
       version:
         description: 'The version that will be deployed'
         required: true
