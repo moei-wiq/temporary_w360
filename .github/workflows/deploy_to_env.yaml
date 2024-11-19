@@ -22,7 +22,7 @@ on:
         default: true
         type: boolean
       manual_call:
-        description: 'To distinguish workflow_call from workflow_dispatch'
+        description: 'Set to true if this is triggered manually'
         type: boolean
         required: false
         default: true
@@ -73,7 +73,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: $RELEASE_BRANCH
+          ref: release/${{ inputs.version }}
 
       - name: Create GitHub release
         uses: actions/create-release@v1
