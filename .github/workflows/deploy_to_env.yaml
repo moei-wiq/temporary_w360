@@ -120,5 +120,6 @@ jobs:
 
       - name: Delete release branch
         if: ${{ inputs.delete_release_branch_on_failure }}
+        continue-on-error: true
         run: |
           git push origin --delete $RELEASE_BRANCH
