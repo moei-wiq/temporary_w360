@@ -1,5 +1,5 @@
-name: Create or Update Release
-run-name: Create or update release for${{ github.event.release.tag_name }} by ${{ github.actor }}
+name: Create Release
+run-name: Create release for${{ github.event.release.tag_name }} by ${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
@@ -79,6 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: prod
+    outputs:
+      release_branch: ${{ steps.create-release-branch.outputs.release_branch }}
     steps:
       - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
@@ -95,10 +97,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create release branch
+        id: create-release-branch
         run: |
           git checkout -b release/$RELEASE_VERSION
           git tag $RELEASE_VERSION
           git push origin release/$RELEASE_VERSION
+          echo "release_branch=release/$RELEASE_VERSION" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
@@ -122,6 +126,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.create-release.outputs.release_branch }}
 
       - name: Deploy to production
         run: echo "Deploying to production..."
