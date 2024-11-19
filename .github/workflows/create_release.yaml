@@ -76,8 +76,6 @@ jobs:
           echo "Bump version $version ---> $new_version"
 
 
-
-
   prepare-release:
     needs: bump-version
     if: ${{ github.event.inputs.release_type != 'patch' }}
@@ -174,4 +172,4 @@ jobs:
       - name: Delete release branch
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
-          git branch -D release/$RELEASE_VERSION
+          git push origin --delete ${{ needs.prepare-release.outputs.release_branch }}
