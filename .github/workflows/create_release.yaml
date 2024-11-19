@@ -11,12 +11,6 @@ on:
         options:
             - major
             - minor
-            - patch
-      commit_sha:
-        description: 'Commit SHA to cherry-pick (only required for patch)'
-        required: false
-        type: string
-
 
 jobs:
   validate-source-branch:
@@ -121,43 +115,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  update-release:
-    needs: bump-version
-    if: ${{ github.event.inputs.release_type == 'patch' }}
+  deploy:
     runs-on: ubuntu-latest
     environment:
       name: prod
     steps:
-      - name: Checkout the branch the workflow is run from
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          persist-credentials: false
 
-      - name: Authenticate with github
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update release branch with patch
-        run: |
-          git fetch origin main
-          git cherry-pick origin/main ${{ github.event.inputs.commit_sha }}
-          git push origin ${{ github.head_ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ needs.bump-version.outputs.new_version }}
-          release_name: Release ${{ needs.bump-version.outputs.new_version }}
-          body: |
-            Release ${{ github.event.inputs.release_type }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to production
+        run: echo "Deploying to production..."
