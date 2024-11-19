@@ -51,6 +51,7 @@ jobs:
           fi
 
   deploy:
+    needs: [ validate-source-branch]
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event.inputs.env }}
