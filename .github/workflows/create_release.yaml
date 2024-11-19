@@ -161,6 +161,9 @@ jobs:
           else
             echo "Release ${{ github.env.RELEASE_VERSION }} not found."
           fi
+      - name: Delete Git tag
+        run: |
+          git push --delete origin ${{ github.env.RELEASE_VERSION }}
       - name: Delete release branch
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
