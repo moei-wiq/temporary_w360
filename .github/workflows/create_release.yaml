@@ -147,6 +147,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
+      RELEASE_BRANCH: ${{ needs.prepare-release.outputs.release_branch }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -172,4 +173,4 @@ jobs:
       - name: Delete release branch
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
-          git push origin --delete ${{ needs.prepare-release.outputs.release_branch }}
+          git push origin --delete $RELEASE_BRANCH
