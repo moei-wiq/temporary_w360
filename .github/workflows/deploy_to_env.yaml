@@ -57,23 +57,23 @@ jobs:
       name: ${{ github.event.inputs.env }}
     env:
       RELEASE_VERSION: ${{ github.event.inputs.version }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_BRANCH: release/${{ github.event.inputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare-release.outputs.release_branch }}
+          ref: $RELEASE_BRANCH
 
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ needs.bump-version.outputs.new_version }}
-          release_name: Release ${{ needs.bump-version.outputs.new_version }}
+          tag_name: $RELEASE_VERSION
+          release_name: Release $RELEASE_VERSION
           body: |
-            Release ${{ github.event.inputs.release_type }}
+            Release $$RELEASE_VERSION
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to production
         run: echo "Deploying to ${{ inputs.env }} ..."
@@ -85,7 +85,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ github.event.inputs.version }}
-      RELEASE_BRANCH: ${{ github.ref }}
+      RELEASE_BRANCH: release/${{ github.event.inputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
