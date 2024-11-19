@@ -51,7 +51,7 @@ jobs:
           fi
 
   deploy:
-    needs: [ validate-source-branch]
+    needs: [ validate-source-branch ]
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.event.inputs.env }}
@@ -84,8 +84,6 @@ jobs:
     if: failure()
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_VERSION: ${{ github.event.inputs.version }}
-      RELEASE_BRANCH: release/${{ github.event.inputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -93,12 +91,12 @@ jobs:
         continue-on-error: true
         run: |
           release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/${{ github.repository }}/releases/tags/$RELEASE_VERSION \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ github.event.inputs.version }} \
             | jq -r '.id')
           if [ "$release_id" != "null" ]; then
             curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
               https://api.github.com/repos/${{ github.repository }}/releases/$release_id
-            echo "Release $RELEASE_VERSION deleted."
+            echo "Release ${{ github.event.inputs.version }} deleted."
           else
             echo "Release $RELEASE_VERSION not found."
           fi
@@ -111,4 +109,4 @@ jobs:
       - name: Delete release branch
         if: ${{ github.event.inputs.delete_release_branch_on_failure }}
         run: |
-          git push origin --delete $RELEASE_BRANCH
+          git push origin --delete release/${{ github.event.inputs.version }}
