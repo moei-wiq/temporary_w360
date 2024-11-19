@@ -21,6 +21,11 @@ on:
         required: true
         default: true
         type: boolean
+      manual_call:
+        description: 'To distinguish workflow_call from workflow_dispatch'
+        type: boolean
+        required: true
+        default: true
   workflow_call:
     inputs:
       env:
@@ -38,6 +43,11 @@ on:
         required: true
         default: true
         type: boolean
+      manual_call:
+        description: 'To distinguish workflow_call from workflow_dispatch'
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   validate-source-branch:
@@ -45,7 +55,7 @@ jobs:
     steps:
       - name: Validate source branch
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
+          if [[ "${{ inputs.manual_call }}" && "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
             echo "Error: Can only deploy from existing release/* branches in production"
             exit 1
           fi
