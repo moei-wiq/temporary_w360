@@ -79,10 +79,10 @@ jobs:
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
-          tag_name: $RELEASE_VERSION
-          release_name: Release $RELEASE_VERSION
+          tag_name: ${{ inputs.version }}
+          release_name: Release ${{ inputs.version }}
           body: |
-            Release $$RELEASE_VERSION
+            Release ${{ inputs.version }}
           draft: false
           prerelease: false
 
