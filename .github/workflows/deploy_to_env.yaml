@@ -1,7 +1,7 @@
 name: Deploy to ${{ inputs.env }} environment
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       env:
         description: 'Which environment to deploy to'
