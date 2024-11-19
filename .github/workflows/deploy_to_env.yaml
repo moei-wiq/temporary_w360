@@ -55,7 +55,7 @@ jobs:
     steps:
       - name: Validate source branch
         run: |
-          if [[ "${{ inputs.manual_call }}" && "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
+          if [[ ${{ inputs.manual_call }} && "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
             echo "Error: Can only deploy from existing release/* branches in production"
             exit 1
           fi
