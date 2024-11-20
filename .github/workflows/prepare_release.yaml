@@ -97,12 +97,12 @@ jobs:
         id: prepare-release-branch
         continue-on-error: true
         env:
-          CURRENT_BRANCH: ${{ needs.get-source-branch.outputs.source_branch }}
+          SOURCE_BRANCH: ${{ needs.get-source-branch.outputs.source_branch }}
         run: |
-          git checkout $CURRENT_BRANCH
+          git checkout $SOURCE_BRANCH
           if [ "$IS_PATCH_RELEASE" = "true" ]; then
             echo "This is a patch release."
-            echo "release_branch=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
+            echo "release_branch=$SOURCE_BRANCH" >> $GITHUB_OUTPUT
           else
             echo "This is not a patch release."
             if git show-ref --verify --quiet refs/heads/release/$RELEASE_VERSION; then

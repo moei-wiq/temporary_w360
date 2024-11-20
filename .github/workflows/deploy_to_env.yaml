@@ -57,6 +57,7 @@ jobs:
           echo "Latest version: $version"
 
   run-checks:
+    needs: [get-release-version]
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
