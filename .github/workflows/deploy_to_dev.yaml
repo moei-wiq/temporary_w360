@@ -12,3 +12,4 @@ jobs:
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'dev'
+      release_branch: ${{ github.ref }}
