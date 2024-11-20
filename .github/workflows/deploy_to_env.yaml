@@ -19,7 +19,7 @@ on:
 #        type: string
 #      delete_release_branch_on_failure:
 #        description: 'Whether to delete release branch if deployment fails'
-#        required: true
+#        required: false
 #        default: true
 #        type: boolean
 #      manual_call:
@@ -41,7 +41,7 @@ on:
         type: string
       delete_release_branch_on_failure:
         description: 'Whether to delete release branch if deployment fails'
-        required: true
+        required: false
         default: true
         type: boolean
       manual_call:
@@ -163,7 +163,7 @@ jobs:
   cleanup-failed-deployment:
     needs: [ deploy ]
     runs-on: ubuntu-latest
-    if: failure() && ${{ inputs.env == 'prod' }}
+    if: ${{ failure() && inputs.env == 'prod' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ inputs.version }}
