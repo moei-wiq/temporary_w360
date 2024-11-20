@@ -30,3 +30,4 @@ jobs:
       env: 'prod'
       release_version: ${{ needs.prepare-release-job.outputs.release_version }}
       release_branch: ${{ needs.prepare-release-job.outputs.release_branch }}
+      release_type: ${{ inputs.release_type }}

@@ -18,11 +18,11 @@ on:
         required: false
         default: ${{ github.ref }}
         type: string
-      delete_release_branch_on_failure:
-        description: 'Whether to delete release branch and tag if deployment fails'
-        required: false
-        default: false
-        type: boolean
+      release_type:
+        description: 'Is this release a major, minor, or patch release? See https://semver.org for definitions.'
+        required: true
+        default: 'minor'
+        type: string
 
 jobs:
   run-checks:
@@ -152,14 +152,14 @@ jobs:
           fi
 
       - name: Delete Git tag
-        if: ${{ inputs.delete_release_branch_on_failure }}
+        if: ${{ inputs.release_type != 'patch' }}
         continue-on-error: true
         run: |
           echo "Release version: $RELEASE_VERSION"
           git push --delete origin $RELEASE_VERSION
 
       - name: Delete release branch
-        if: ${{ inputs.delete_release_branch_on_failure }}
+        if: ${{ inputs.release_type != 'patch' }}
         continue-on-error: true
         run: |
           git push origin --delete $RELEASE_BRANCH
