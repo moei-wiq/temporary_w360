@@ -21,7 +21,6 @@ jobs:
   prepare-release-job:
     uses: ./.github/workflows/prepare_release.yaml
     with:
-      env: 'prod'
       release_type: ${{ inputs.release_type }}
 
   deploy-job:
