@@ -96,7 +96,7 @@ jobs:
 
 
   deploy:
-    needs: [ run-checks, get-release-version ]
+    needs: [run-checks, get-release-version]
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.env }}
@@ -141,7 +141,7 @@ jobs:
         run: terraform apply -auto-approve
 
   cleanup-failed-deployment:
-    needs: [ deploy, get-release-version ]
+    needs: [deploy, get-release-version]
     runs-on: ubuntu-latest
     if: ${{ failure() && inputs.env == 'prod' && inputs.cleanup_failed_deployment }}
     env:

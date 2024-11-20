@@ -17,40 +17,7 @@ on:
         value: ${{ jobs.prepare-release.outputs.release_branch }}
 
 jobs:
-#  get-source-branch:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout the git info
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0
-#      - name: Get source branch
-#        id: get-source-branch
-#        run: |
-#          if [ "${{ inputs.release_type }}" == "patch" ]; then
-#            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin/refs\/heads/' | xargs echo -n)
-#            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
-#            echo "source_branch=$latest_release_branch"
-#          else
-#            echo "source_branch=refs/heads/main" >> $GITHUB_OUTPUT
-#            echo "source_branch=refs/heads/main"
-#          fi
-#
-#  validate-source-branch:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Validate source branch
-#        run: |
-#          if [[ "${{ github.event.inputs.release_type }}" != "patch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
-#            echo "Error: Can only create major/minor release from the main branch"
-#            exit 1
-#          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ("${{ github.ref }}" != refs/heads/release/* || "${{ github.ref }}" != refs/tags/*)]]; then
-#            echo "Error: Can only create patch release from a release branch or an existing tag"
-#            exit 1
-#          fi
-
   bump-version:
-#    needs: validate-source-branch
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.increment-version.outputs.new_version }}
@@ -75,17 +42,17 @@ jobs:
         run: |
           version=$(git tag --sort=creatordate | tail -1)
           IFS='.' read -r major minor patch <<< "${version:1}"
-          if [[ "${{ github.event.inputs.release_type }}" == "major" ]]; then
+          if [[ "${{ inputs.release_type }}" == "major" ]]; then
             major=$((major + 1))
             minor=0
             patch=0
-          elif [[ "${{ github.event.inputs.release_type }}" == "minor" ]]; then
+          elif [[ "${{ inputs.release_type }}" == "minor" ]]; then
             minor=$((minor + 1))
             patch=0
-          elif [[ "${{ github.event.inputs.release_type }}" == "patch" ]]; then
+          elif [[ "${{ inputs.release_type }}" == "patch" ]]; then
             patch=$((patch + 1))
           else
-            echo "Error: Unknown release type ${{ github.event.inputs.release_type }}"
+            echo "Error: Unknown release type ${{ inputs.release_type }}"
             exit 1
           fi
           new_version="v${major}.${minor}.${patch}"
@@ -147,7 +114,7 @@ jobs:
           fi
           git tag $RELEASE_VERSION
           git push origin $RELEASE_VERSION
-          
+
       - name: Create GitHub release
         uses: actions/create-release@v1
         with:
