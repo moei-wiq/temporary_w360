@@ -34,15 +34,20 @@ on:
         required: true
         default: 'dev'
         type: string
-      version:
+      release_version:
         description: 'The version that will be deployed'
-        required: true
+        required: false
         default: 'v0.0.0'
+        type: string
+      release_branch:
+        description: 'The release branch that will be deployed'
+        required: false
+        default: ${{ github.ref }}
         type: string
       delete_release_branch_on_failure:
         description: 'Whether to delete release branch if deployment fails'
         required: false
-        default: true
+        default: false
         type: boolean
       manual_call:
         description: 'To distinguish workflow_call from workflow_dispatch'
@@ -57,7 +62,7 @@ jobs:
       - name: Validate source branch
         run: |
           if ${{ inputs.manual_call }} && [[ "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
-            echo "Error: Can only deploy from existing release/* branches in production"
+            echo "Error: Can only deploy from existing release/* branches to production"
             exit 1
           fi
 
@@ -73,7 +78,7 @@ jobs:
         if: ${{ inputs.env == 'prod' }}
         uses: actions/checkout@v4
         with:
-          ref: release/${{ inputs.version }}
+          ref: ${{ inputs.release_branch }}
 
 #      - id: auth
 #        uses: google-github-actions/auth@v2
@@ -110,9 +115,9 @@ jobs:
     environment:
       name: ${{ inputs.env }}
     env:
-      RELEASE_VERSION: ${{ inputs.version }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_BRANCH: release/${{ inputs.version }}
+      RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
@@ -122,7 +127,7 @@ jobs:
         if: ${{ inputs.env == 'prod' }}
         uses: actions/checkout@v4
         with:
-          ref: release/${{ inputs.version }}
+          ref: ${{ inputs.release_branch }}
 
 #      - id: auth
 #        uses: google-github-actions/auth@v2
@@ -142,10 +147,10 @@ jobs:
         if: ${{ inputs.env == 'prod' }}
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ inputs.version }}
-          release_name: Release ${{ inputs.version }}
+          tag_name: ${{ inputs.release_version }}
+          release_name: Release ${{ inputs.release_version }}
           body: |
-            Release ${{ inputs.version }}
+            Release ${{ inputs.release_version }}
           draft: false
           prerelease: false
 
@@ -166,8 +171,8 @@ jobs:
     if: ${{ failure() && inputs.env == 'prod' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_VERSION: ${{ inputs.version }}
-      RELEASE_BRANCH: release/${{ inputs.version }}
+      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

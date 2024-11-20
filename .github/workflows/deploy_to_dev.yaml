@@ -1,4 +1,4 @@
-name: Deploy to DEV
+name: Deploy to dev
 on:
   workflow_dispatch:
 
@@ -12,5 +12,3 @@ jobs:
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'dev'
-      version: ${{ needs.bump-version.outputs.new_version }}
-      delete_release_branch_on_failure: false
