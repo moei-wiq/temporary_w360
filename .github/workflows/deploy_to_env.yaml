@@ -137,6 +137,7 @@ jobs:
     steps:
       - name: print branch name
         run: echo ${{ inputs.release_branch }}
+
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
         uses: actions/checkout@v4

@@ -81,7 +81,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
     outputs:
-      release_branch: ${{ steps.prepare-release-branch.outputs.release_branch }} release/${{ needs.bump-version.outputs.new_version }}
+      release_branch: ${{ steps.prepare-release-branch.outputs.release_branch }}
     steps:
       - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
