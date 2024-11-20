@@ -20,7 +20,7 @@ on:
         type: string
       release_type:
         description: 'Is this release a major, minor, or patch release? See https://semver.org for definitions.'
-        required: true
+        required: false
         default: 'minor'
         type: string
       cleanup_failed_deployment:
