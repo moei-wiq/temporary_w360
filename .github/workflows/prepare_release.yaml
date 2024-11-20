@@ -20,6 +20,10 @@ jobs:
   get-source-branch:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout the git info
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Get source branch
         id: get-source-branch
         run: |
