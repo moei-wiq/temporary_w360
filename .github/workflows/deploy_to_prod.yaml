@@ -25,9 +25,18 @@ jobs:
 
   deploy-job:
     uses: ./.github/workflows/deploy_to_env.yaml
-    needs: [ prepare-release-job ]
+    needs: [prepare-release-job]
     with:
       env: 'prod'
       release_version: ${{ needs.prepare-release-job.outputs.release_version }}
       release_branch: ${{ needs.prepare-release-job.outputs.release_branch }}
       release_type: ${{ inputs.release_type }}
+      cleanup_failed_deployment: true
+
+  rollback-job:
+    needs: [deploy-job]
+    if: ${{ failure() }}
+    uses: ./.github/workflows/deploy_to_env.yaml
+    with:
+      env: 'prod'
+      cleanup_failed_deployment: false
