@@ -39,4 +39,5 @@ jobs:
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'prod'
+      release_branch: ${{ github.ref }}
       cleanup_failed_deployment: false
