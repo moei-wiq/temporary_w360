@@ -58,7 +58,7 @@ jobs:
       - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -103,7 +103,7 @@ jobs:
     outputs:
       release_branch: ${{ steps.prepare-release-branch.outputs.release_branch }}
     steps:
-      - name: Checkout the branch the workflow is run from
+      - name: Checkout all git history & branches
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -126,18 +126,13 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}
 
-      - name: Checkout the source branch
-        id: checkout-source-branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.get-source-branch.outputs.source_branch }}
-
       - name: Prepare release branch
         id: prepare-release-branch
         continue-on-error: true
         env:
           CURRENT_BRANCH: ${{ needs.get-source-branch.outputs.source_branch }}
         run: |
+          git checkout $CURRENT_BRANCH
           if [ "$IS_PATCH_RELEASE" = "true" ]; then
             echo "This is a patch release."
             echo "release_branch=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
