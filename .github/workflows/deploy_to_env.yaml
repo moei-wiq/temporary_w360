@@ -31,7 +31,6 @@ on:
 
 jobs:
   get-release-version:
-    if: ${{ inputs.release_type == 'rollback' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-release-version.outputs.version }}
