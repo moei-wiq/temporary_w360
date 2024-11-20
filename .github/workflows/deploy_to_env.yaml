@@ -140,7 +140,7 @@ jobs:
         if: ${{ inputs.env == 'prod' }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.release_branch }}
+          ref: release/v2.1.0 #${{ inputs.release_branch }}
 
 #      - id: auth
 #        uses: google-github-actions/auth@v2
