@@ -13,3 +13,4 @@ jobs:
     with:
       env: 'dev'
       release_branch: ${{ github.ref }}
+      run_check_only: false

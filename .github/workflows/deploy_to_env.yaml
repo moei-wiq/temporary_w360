@@ -23,6 +23,11 @@ on:
         required: false
         default: 'minor'
         type: string
+      run_check_only:
+        description: 'Run check only without deploying?'
+        required: false
+        default: false
+        type: boolean
       cleanup_failed_deployment:
         description: 'Cleanup failed deployment?'
         required: false
@@ -97,6 +102,7 @@ jobs:
 
   deploy:
     needs: [run-checks, get-release-version]
+    if: ${{ !inputs.run_check_only }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.env }}
@@ -143,7 +149,7 @@ jobs:
   cleanup-failed-deployment:
     needs: [deploy, get-release-version]
     runs-on: ubuntu-latest
-    if: ${{ failure() && inputs.env == 'prod' && inputs.cleanup_failed_deployment }}
+    if: ${{ failure() && inputs.env == 'prod' && inputs.cleanup_failed_deployment}}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.get-release-version.outputs.version }}
