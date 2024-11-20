@@ -75,13 +75,13 @@ jobs:
         with:
           ref: release/${{ inputs.version }}
 
-      - id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
-          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
-          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
-          token_format: access_token
+#      - id: auth
+#        uses: google-github-actions/auth@v2
+#        with:
+#          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
+#          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
+#          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
+#          token_format: access_token
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -124,13 +124,13 @@ jobs:
         with:
           ref: release/${{ inputs.version }}
 
-      - id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
-          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
-          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
-          token_format: access_token
+#      - id: auth
+#        uses: google-github-actions/auth@v2
+#        with:
+#          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
+#          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
+#          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
+#          token_format: access_token
 
       # we need poetry when terraform runs zip_and_upload_artifact.sh
       - name: Install poetry
