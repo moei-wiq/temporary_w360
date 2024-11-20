@@ -1,32 +1,32 @@
 name: Deploy to selected environment
 
 on:
-  workflow_dispatch:
-    inputs:
-      env:
-        description: 'Which environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - uat
-          - prod
-      version:
-        description: 'The version that will be deployed'
-        required: true
-        default: 'v0.0.0'
-        type: string
-      delete_release_branch_on_failure:
-        description: 'Whether to delete release branch if deployment fails'
-        required: true
-        default: true
-        type: boolean
-      manual_call:
-        description: 'Set to true if this is triggered manually'
-        type: boolean
-        required: false
-        default: true
+#  workflow_dispatch:
+#    inputs:
+#      env:
+#        description: 'Which environment to deploy to'
+#        required: true
+#        default: 'dev'
+#        type: choice
+#        options:
+#          - dev
+#          - uat
+#          - prod
+#      version:
+#        description: 'The version that will be deployed'
+#        required: true
+#        default: 'v0.0.0'
+#        type: string
+#      delete_release_branch_on_failure:
+#        description: 'Whether to delete release branch if deployment fails'
+#        required: true
+#        default: true
+#        type: boolean
+#      manual_call:
+#        description: 'Set to true if this is triggered manually'
+#        type: boolean
+#        required: false
+#        default: true
   workflow_call:
     inputs:
       env:
@@ -158,7 +158,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ./infrastructure/${{ inputs.env }}
-        run: echo "terraform apply -auto-approve"
+        run: terraform apply -auto-approve
 
   cleanup-failed-deployment:
     needs: [ deploy ]
