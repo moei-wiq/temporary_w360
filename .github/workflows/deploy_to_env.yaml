@@ -72,6 +72,9 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: print branch name
+      - run: echo ${{ inputs.release_branch }}
+
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
         uses: actions/checkout@v4
@@ -90,16 +93,16 @@ jobs:
 #          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
 #          token_format: access_token
 
-      - name: Create GitHub release
-        if: ${{ inputs.env == 'prod' }}
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ inputs.release_version }}
-          release_name: Release ${{ inputs.release_version }}
-          body: |
-            Release ${{ inputs.release_version }}
-          draft: true
-          prerelease: true
+#      - name: Create GitHub release
+#        if: ${{ inputs.env == 'prod' }}
+#        uses: actions/create-release@v1
+#        with:
+#          tag_name: ${{ inputs.release_version }}
+#          release_name: Release ${{ inputs.release_version }}
+#          body: |
+#            Release ${{ inputs.release_version }}
+#          draft: true
+#          prerelease: true
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
