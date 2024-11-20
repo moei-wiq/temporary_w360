@@ -17,6 +17,20 @@ on:
         value: ${{ jobs.prepare-release.outputs.release_branch }}
 
 jobs:
+  get-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get source branch
+        id: get-source-branch
+        run: |
+          if [ "${{ inputs.release_type }}" == "patch" ]; then
+            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin\///')
+            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
+            echo "source_branch=$latest_release_branch"
+          else
+            echo "source_branch=main" >> $GITHUB_OUTPUT
+            echo "source_branch=main"
+
   validate-source-branch:
     runs-on: ubuntu-latest
     steps:
@@ -83,6 +97,14 @@ jobs:
     outputs:
       release_branch: ${{ steps.prepare-release-branch.outputs.release_branch }}
     steps:
+#      - name: Get source branch
+#        id: get-source-branch
+#        run: |
+#          if [ "${{ inputs.release_type }}" == "patch" ]; then
+#            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin\///')
+#            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
+#          else
+#            echo "source_branch=main" >> $GITHUB_OUTPUT
       - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
         with:
