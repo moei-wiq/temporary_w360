@@ -103,16 +103,16 @@ jobs:
         with:
           poetry-version: 1.8.3
 
-      - name: Create GitHub release
-        if: ${{ inputs.env == 'prod' }}
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ inputs.release_version }}
-          release_name: Release ${{ inputs.release_version }}
-          body: |
-            Release ${{ inputs.release_version }}
-          draft: false
-          prerelease: false
+#      - name: Create GitHub release
+#        if: ${{ inputs.env == 'prod' }}
+#        uses: actions/create-release@v1
+#        with:
+#          tag_name: ${{ inputs.release_version }}
+#          release_name: Release ${{ inputs.release_version }}
+#          body: |
+#            Release ${{ inputs.release_version }}
+#          draft: false
+#          prerelease: false
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
