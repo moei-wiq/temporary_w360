@@ -132,6 +132,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
+      - name: print branch name
+        run: echo ${{ inputs.release_branch }}
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
         uses: actions/checkout@v4
@@ -140,7 +142,7 @@ jobs:
         if: ${{ inputs.env == 'prod' }}
         uses: actions/checkout@v4
         with:
-          ref: release/v2.1.0 #${{ inputs.release_branch }}
+          ref: ${{ inputs.release_branch }}
 
 #      - id: auth
 #        uses: google-github-actions/auth@v2
