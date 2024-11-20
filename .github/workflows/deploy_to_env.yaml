@@ -73,7 +73,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: print branch name
-      - run: echo ${{ inputs.release_branch }}
+        run: echo ${{ inputs.release_branch }}
 
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
