@@ -69,6 +69,8 @@ jobs:
   run-checks:
     needs: [ validate-source-branch ]
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
@@ -87,6 +89,17 @@ jobs:
 #          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
 #          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
 #          token_format: access_token
+
+      - name: Create GitHub release
+        if: ${{ inputs.env == 'prod' }}
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ inputs.release_version }}
+          release_name: Release ${{ inputs.release_version }}
+          body: |
+            Release ${{ inputs.release_version }}
+          draft: true
+          prerelease: true
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
