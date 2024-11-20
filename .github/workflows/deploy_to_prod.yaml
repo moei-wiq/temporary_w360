@@ -8,13 +8,9 @@ on:
         default: 'minor'
         type: choice
         options:
-          - major
-          - minor
-          - patch
-#      version:
-#        description: 'This will be used to tag the release'
-#        required: true
-#        default: 'v0.0.0'
+            - major
+            - minor
+            - patch
 
 permissions:
   contents: write
