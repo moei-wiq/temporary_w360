@@ -28,12 +28,12 @@ jobs:
         id: get-source-branch
         run: |
           if [ "${{ inputs.release_type }}" == "patch" ]; then
-            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin\///')
+            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin/refs\/heads/')
             echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
             echo "source_branch=$latest_release_branch"
           else
-            echo "source_branch=ref/head/main" >> $GITHUB_OUTPUT
-            echo "source_branch=ref/head/main"
+            echo "source_branch=refs/heads/main" >> $GITHUB_OUTPUT
+            echo "source_branch=refs/heads/main"
           fi
 
   validate-source-branch:
