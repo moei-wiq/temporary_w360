@@ -8,11 +8,11 @@ on:
         description: 'Is this release a major, minor, or patch release? See https://semver.org for definitions.'
         required: true
         default: 'minor'
-        type: choice
-        options:
-            - major
-            - minor
-            - patch
+        type: string
+#        options:
+#            - major
+#            - minor
+#            - patch
     outputs:
       release_version:
         description: 'The new version number'
