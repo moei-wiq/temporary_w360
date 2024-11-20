@@ -1,32 +1,6 @@
 name: Deploy to selected environment
 
 on:
-#  workflow_dispatch:
-#    inputs:
-#      env:
-#        description: 'Which environment to deploy to'
-#        required: true
-#        default: 'dev'
-#        type: choice
-#        options:
-#          - dev
-#          - uat
-#          - prod
-#      version:
-#        description: 'The version that will be deployed'
-#        required: true
-#        default: 'v0.0.0'
-#        type: string
-#      delete_release_branch_on_failure:
-#        description: 'Whether to delete release branch if deployment fails'
-#        required: false
-#        default: true
-#        type: boolean
-#      manual_call:
-#        description: 'Set to true if this is triggered manually'
-#        type: boolean
-#        required: false
-#        default: true
   workflow_call:
     inputs:
       env:
@@ -45,15 +19,10 @@ on:
         default: ${{ github.ref }}
         type: string
       delete_release_branch_on_failure:
-        description: 'Whether to delete release branch if deployment fails'
+        description: 'Whether to delete release branch and tag if deployment fails'
         required: false
         default: false
         type: boolean
-      manual_call:
-        description: 'To distinguish workflow_call from workflow_dispatch'
-        type: boolean
-        required: false
-        default: false
 
 jobs:
   validate-source-branch:
@@ -61,7 +30,7 @@ jobs:
     steps:
       - name: Validate source branch
         run: |
-          if ${{ inputs.manual_call }} && [[ "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
+          if [[ "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
             echo "Error: Can only deploy from existing release/* branches to production"
             exit 1
           fi
@@ -72,9 +41,6 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: print branch name
-        run: echo ${{ inputs.release_branch }}
-
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
         uses: actions/checkout@v4
@@ -92,17 +58,6 @@ jobs:
 #          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
 #          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
 #          token_format: access_token
-
-#      - name: Create GitHub release
-#        if: ${{ inputs.env == 'prod' }}
-#        uses: actions/create-release@v1
-#        with:
-#          tag_name: ${{ inputs.release_version }}
-#          release_name: Release ${{ inputs.release_version }}
-#          body: |
-#            Release ${{ inputs.release_version }}
-#          draft: true
-#          prerelease: true
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -135,9 +90,6 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
-      - name: print branch name
-        run: echo ${{ inputs.release_branch }}
-
       - name: Checkout source branch
         if: ${{ inputs.env != 'prod' }}
         uses: actions/checkout@v4
@@ -208,18 +160,9 @@ jobs:
           else
             echo "Release $RELEASE_VERSION not found."
           fi
-          
-          draft_release_id=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/${{ github.repository }}/releases \
-            | jq -r '.[] | select(.tag_name == "'$RELEASE_VERSION'" and .draft == true) | .id')
-          if [ "$draft_release_id" != "null" ]; then
-            curl -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              https://api.github.com/repos/${{ github.repository }}/releases/$draft_release_id
-            echo "Draft release $RELEASE_VERSION deleted."
-          else
-            echo "Draft release $RELEASE_VERSION not found."
-          fi
+
       - name: Delete Git tag
+        if: ${{ inputs.delete_release_branch_on_failure }}
         continue-on-error: true
         run: |
           echo "Release version: $RELEASE_VERSION"
