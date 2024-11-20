@@ -61,8 +61,51 @@ jobs:
             exit 1
           fi
 
-  deploy:
+  run-checks:
     needs: [ validate-source-branch ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source branch
+        if: ${{ inputs.env != 'prod' }}
+        uses: actions/checkout@v4
+
+      - name: Checkout release branch
+        if: ${{ inputs.env == 'prod' }}
+        uses: actions/checkout@v4
+        with:
+          ref: release/${{ inputs.version }}
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
+          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
+          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
+          token_format: access_token
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      - name: Terraform Init
+        id: init
+        working-directory: ./infrastructure/${{ inputs.env }}
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        working-directory: ./infrastructure/${{ inputs.env }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ./infrastructure/${{ inputs.env }}
+        run: terraform plan -no-color -lock=false
+
+
+  deploy:
+    needs: [ run-checks ]
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.env }}
@@ -71,12 +114,32 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_BRANCH: release/${{ inputs.version }}
     steps:
-      - name: Checkout code
+      - name: Checkout source branch
+        if: ${{ inputs.env != 'prod' }}
+        uses: actions/checkout@v4
+
+      - name: Checkout release branch
+        if: ${{ inputs.env == 'prod' }}
         uses: actions/checkout@v4
         with:
           ref: release/${{ inputs.version }}
 
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: "gcp-wow-wiq-008-${{ inputs.env }}"
+          workload_identity_provider: "projects/493273391016/locations/global/workloadIdentityPools/wiqlabs-dev-github1-ip/providers/wiqlabs-devgithub1-pi"
+          service_account: "sa-wiqlabs-project-deployer@gcp-wow-corp-infra-qrtl-prod.iam.gserviceaccount.com"
+          token_format: access_token
+
+      # we need poetry when terraform runs zip_and_upload_artifact.sh
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.8.3
+
       - name: Create GitHub release
+        if: ${{ inputs.env == 'prod' }}
         uses: actions/create-release@v1
         with:
           tag_name: ${{ inputs.version }}
@@ -86,13 +149,21 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Deploy to production
-        run: echo "Deploying to ${{ inputs.env }} ..."
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ./infrastructure/${{ inputs.env }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ./infrastructure/${{ inputs.env }}
+        run: echo "terraform apply -auto-approve"
 
   cleanup-failed-deployment:
     needs: [ deploy ]
     runs-on: ubuntu-latest
-    if: failure()
+    if: failure() && ${{ inputs.env == 'prod' }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ inputs.version }}

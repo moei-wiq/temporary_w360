@@ -1,0 +1,16 @@
+name: Deploy to DEV
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  call-deploy-job:
+    uses: ./.github/workflows/deploy_to_env.yaml
+    with:
+      env: 'dev'
+      version: ${{ needs.bump-version.outputs.new_version }}
+      delete_release_branch_on_failure: false
