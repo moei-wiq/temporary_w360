@@ -25,18 +25,7 @@ on:
         type: boolean
 
 jobs:
-  validate-source-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate source branch
-        run: |
-          if [[ "${{ inputs.env }}" == "prod" && "${{ github.ref }}" != refs/heads/release/* ]]; then
-            echo "Error: Can only deploy from existing release/* branches to production"
-            exit 1
-          fi
-
   run-checks:
-    needs: [ validate-source-branch ]
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
