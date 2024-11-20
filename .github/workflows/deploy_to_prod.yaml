@@ -30,7 +30,8 @@ jobs:
 
   deploy-job:
     uses: ./.github/workflows/deploy_to_env.yaml
+    needs: [ prepare-release-job ]
     with:
       env: 'prod'
-      release_version: ${{ jobs.prepare-release-job.outputs.release_version }}
-      release_branch: ${{ jobs.prepare-release-job.outputs.release_branch }}
+      release_version: ${{ needs.prepare-release-job.outputs.release_version }}
+      release_branch: ${{ needs.prepare-release-job.outputs.release_branch }}
