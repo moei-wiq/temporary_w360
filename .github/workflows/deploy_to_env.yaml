@@ -11,7 +11,7 @@ on:
       release_version:
         description: 'The version that will be deployed'
         required: false
-        default: 'v0.0.0'
+        default: 'latest'
         type: string
       release_branch:
         description: 'The release branch that will be deployed'
@@ -23,8 +23,35 @@ on:
         required: true
         default: 'minor'
         type: string
+      cleanup_failed_deployment:
+        description: 'Cleanup failed deployment?'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
+  get-release-version:
+    if: ${{ inputs.release_type == 'rollback' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-release-version.outputs.version }}
+    steps:
+      - name: Checkout the branch the workflow is run from
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get release version
+        id: get-release-version
+        run: |
+          if [ "${{ inputs.release_version }}" != "latest" ]; then
+            version=${{ inputs.release_version }}
+          else
+            version=$(git tag --sort=creatordate | tail -1)
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Latest version: $version"
+
   run-checks:
     runs-on: ubuntu-latest
     env:
@@ -70,12 +97,13 @@ jobs:
 
 
   deploy:
-    needs: [ run-checks ]
+    needs: [ run-checks, get-release-version ]
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.env }}
     env:
-      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_VERSION: ${{ needs.get-release-version.outputs.version }}
+#      RELEASE_VERSION: ${{ inputs.release_version }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
@@ -126,12 +154,13 @@ jobs:
         run: terraform apply -auto-approve
 
   cleanup-failed-deployment:
-    needs: [ deploy ]
+    needs: [ deploy, get-release-version ]
     runs-on: ubuntu-latest
-    if: ${{ failure() && inputs.env == 'prod' }}
+    if: ${{ failure() && inputs.env == 'prod' && inputs.cleanup_failed_deployment }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_VERSION: ${{ inputs.release_version }}
+#      RELEASE_VERSION: ${{ inputs.release_version }}
+      RELEASE_VERSION: ${{ needs.get-release-version.outputs.version }}
       RELEASE_BRANCH: ${{ inputs.release_branch }}
     steps:
       - name: Checkout code
@@ -152,7 +181,6 @@ jobs:
           fi
 
       - name: Delete Git tag
-        if: ${{ inputs.release_type != 'patch' }}
         continue-on-error: true
         run: |
           echo "Release version: $RELEASE_VERSION"
@@ -163,3 +191,6 @@ jobs:
         continue-on-error: true
         run: |
           git push origin --delete $RELEASE_BRANCH
+
+      - name: Fail job
+        run: exit 1
