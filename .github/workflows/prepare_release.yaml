@@ -17,40 +17,40 @@ on:
         value: ${{ jobs.prepare-release.outputs.release_branch }}
 
 jobs:
-  get-source-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the git info
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Get source branch
-        id: get-source-branch
-        run: |
-          if [ "${{ inputs.release_type }}" == "patch" ]; then
-            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin/refs\/heads/')
-            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
-            echo "source_branch=$latest_release_branch"
-          else
-            echo "source_branch=refs/heads/main" >> $GITHUB_OUTPUT
-            echo "source_branch=refs/heads/main"
-          fi
-
-  validate-source-branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate source branch
-        run: |
-          if [[ "${{ github.event.inputs.release_type }}" != "patch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
-            echo "Error: Can only create major/minor release from the main branch"
-            exit 1
-          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ("${{ github.ref }}" != refs/heads/release/* || "${{ github.ref }}" != refs/tags/*)]]; then
-            echo "Error: Can only create patch release from a release branch or an existing tag"
-            exit 1
-          fi
+#  get-source-branch:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout the git info
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: Get source branch
+#        id: get-source-branch
+#        run: |
+#          if [ "${{ inputs.release_type }}" == "patch" ]; then
+#            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin/refs\/heads/' | xargs echo -n)
+#            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
+#            echo "source_branch=$latest_release_branch"
+#          else
+#            echo "source_branch=refs/heads/main" >> $GITHUB_OUTPUT
+#            echo "source_branch=refs/heads/main"
+#          fi
+#
+#  validate-source-branch:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Validate source branch
+#        run: |
+#          if [[ "${{ github.event.inputs.release_type }}" != "patch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
+#            echo "Error: Can only create major/minor release from the main branch"
+#            exit 1
+#          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ("${{ github.ref }}" != refs/heads/release/* || "${{ github.ref }}" != refs/tags/*)]]; then
+#            echo "Error: Can only create patch release from a release branch or an existing tag"
+#            exit 1
+#          fi
 
   bump-version:
-    needs: validate-source-branch
+#    needs: validate-source-branch
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.increment-version.outputs.new_version }}
@@ -99,23 +99,26 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_VERSION: ${{ needs.bump-version.outputs.new_version }}
+      IS_PATCH_RELEASE: ${{ inputs.release_type == 'patch' }}
     outputs:
       release_branch: ${{ steps.prepare-release-branch.outputs.release_branch }}
     steps:
-#      - name: Get source branch
-#        id: get-source-branch
-#        run: |
-#          if [ "${{ inputs.release_type }}" == "patch" ]; then
-#            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin\///')
-#            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
-#          else
-#            echo "source_branch=main" >> $GITHUB_OUTPUT
       - name: Checkout the branch the workflow is run from
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
-          persist-credentials: false
           fetch-depth: 0
+
+      - name: Get source branch
+        id: get-source-branch
+        run: |
+          if [ "$IS_PATCH_RELEASE" == "true" ]; then
+            latest_release_branch=$(git branch -r | grep 'release/' | sort -V | tail -1 | sed 's/origin\///' | xargs echo -n)
+            echo "source_branch=$latest_release_branch" >> $GITHUB_OUTPUT
+            echo "source_branch=$latest_release_branch"
+          else
+            echo "source_branch=main" >> $GITHUB_OUTPUT
+            echo "source_branch=main"
+          fi
 
       - name: Authenticate with github
         run: |
@@ -123,12 +126,17 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}
 
+      - name: Checkout the source branch
+        id: checkout-source-branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.get-source-branch.outputs.source_branch }}
+
       - name: Prepare release branch
         id: prepare-release-branch
         continue-on-error: true
         env:
-          IS_PATCH_RELEASE: ${{ inputs.release_type == 'patch' }}
-          CURRENT_BRANCH: ${{ github.ref }}
+          CURRENT_BRANCH: ${{ needs.get-source-branch.outputs.source_branch }}
         run: |
           if [ "$IS_PATCH_RELEASE" = "true" ]; then
             echo "This is a patch release."
