@@ -98,7 +98,7 @@ jobs:
         id: prepare-release-branch
         continue-on-error: true
         env:
-          SOURCE_BRANCH: ${{ needs.get-source-branch.outputs.source_branch }}
+          SOURCE_BRANCH: ${{ steps.get-source-branch.outputs.source_branch }}
         run: |
           git checkout $SOURCE_BRANCH
           if [ "$IS_PATCH_RELEASE" = "true" ]; then
