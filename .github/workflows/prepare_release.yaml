@@ -1,6 +1,13 @@
+# Prepare for release workflow
+#  - Increment the version number from the latest tag
+#  - Determine which source branch is appropriate to base the release off.
+#    (main branch for major & minor releases and latest release branch for patch releases)
+#  - Create:
+#    - a release branch (for major & minor release)
+#    - a tag the release branch using the version number determined by previous step.
+#    - a GitHub release
+
 name: Prepare release
-# Determines which source branch is appropriate. (main branch for major & minor releases and latest release branch for patch releases)
-# Create release branch and determine the next version number
 on:
   workflow_call:
     inputs:
