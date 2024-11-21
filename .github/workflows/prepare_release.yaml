@@ -1,4 +1,5 @@
 name: Prepare release
+# Determines which source branch is appropriate. (main branch for major & minor releases and latest release branch for patch releases)
 # Create release branch and determine the next version number
 on:
   workflow_call:
@@ -112,6 +113,7 @@ jobs:
             git push origin release/$RELEASE_VERSION
             echo "release_branch=release/$RELEASE_VERSION" >> $GITHUB_OUTPUT
           fi
+          git checkout $release_branch
           git tag $RELEASE_VERSION
           git push origin $RELEASE_VERSION
 
