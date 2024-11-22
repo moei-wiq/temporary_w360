@@ -35,7 +35,9 @@ jobs:
 
   rollback-job:
     needs: [deploy-job]
-    if: ${{ failure() && !skipped() }}
+    if: |
+      always() &&
+      needs.deploy-job.result == 'success'
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'prod'
