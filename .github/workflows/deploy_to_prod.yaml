@@ -37,7 +37,7 @@ jobs:
     needs: [deploy-job]
     if: |
       always() &&
-      needs.deploy-job.result == 'success'
+      needs.deploy-job.result == 'failure'
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'prod'
