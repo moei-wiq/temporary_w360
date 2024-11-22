@@ -8,9 +8,9 @@ on:
         default: 'minor'
         type: choice
         options:
-            - major
-            - minor
-            - patch
+          - major
+          - minor
+          - patch
 
 permissions:
   contents: write
@@ -35,7 +35,7 @@ jobs:
 
   rollback-job:
     needs: [deploy-job]
-    if: ${{ failure() }}
+    if: ${{ failure() && !skipped() }}
     uses: ./.github/workflows/deploy_to_env.yaml
     with:
       env: 'prod'
