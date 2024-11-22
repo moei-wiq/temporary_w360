@@ -33,7 +33,7 @@ jobs:
           if [[ "${{ github.event.inputs.release_type }}" != "patch" && "${{ github.ref }}" != "refs/heads/main" ]]; then
             echo "Error: Can only create major/minor release from the main branch"
             exit 1
-          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ("${{ github.ref }}" != refs/heads/release/* || "${{ github.ref }}" != refs/tags/*)]]; then
+          elif [[ "${{ github.event.inputs.release_type }}" == "patch" && ! ("${{ github.ref }}" =~ refs/heads/release/.* || "${{ github.ref }}" =~ refs/tags/.*)]]; then
             echo "Error: Can only create patch release from a release branch or an existing tag"
             exit 1
           fi

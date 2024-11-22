@@ -185,5 +185,5 @@ jobs:
         run: |
           git push origin --delete $RELEASE_BRANCH
 
-      - name: Fail job
-        run: exit 1
+#      - name: Fail job
+#        run: exit 1
